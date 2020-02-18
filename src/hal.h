@@ -59,7 +59,7 @@ void hal_enableIRQs (void);
  * put system and CPU in low-power mode, sleep until interrupt or deadline reached.
  *   - durationTicks - sleep duration in ticks (rate: 32768 Hz)
  */
-void hal_sleep (s4_t durationTicks);
+void hal_sleep (s4_t deadlineTicks);
 
 /*
  * return 32-bit system time in ticks.

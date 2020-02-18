@@ -85,11 +85,8 @@ void radio_init (void);
 void radio_irq_handler (u1_t dio);
 void os_init (void);
 void os_runloop (void);
-
-/**
- * run one job; return deadline of next job
- */
-u4_t os_runloop_once (void);
+void os_runloop_once (void);
+void os_sleep_until_irq_or_job (u4_t max_deadline_ticks);
 
 //================================================================================
 

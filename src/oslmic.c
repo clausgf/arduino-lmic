@@ -104,13 +104,13 @@ void os_setTimedCallback (osjob_t* job, ostime_t time, osjobcb_t cb) {
 }
 
 // execute jobs from timer and from run queue
-void os_runloop () {
-    while(1) {
+void os_runloop() {
+    while (1) {
         os_runloop_once();
     }
 }
 
-u4_t os_runloop_once() {
+void os_runloop_once() {
     #if LMIC_DEBUG_LEVEL > 1
         bool has_deadline = false;
     #endif
@@ -127,7 +127,7 @@ u4_t os_runloop_once() {
             has_deadline = true;
         #endif
     } else { // nothing pending
-        hal_sleep(0); // wake by irq (timer already restarted)
+        // nothing to do
     }
     hal_enableIRQs();
     if(j) { // run job callback
@@ -136,6 +136,30 @@ u4_t os_runloop_once() {
         #endif
         j->func(j);
     }
+}
 
-    return 0;
+void os_sleep_until_irq_or_job (u4_t max_deadline_ticks) {
+    hal_disableIRQs();
+
+    // determine next job
+    osjob_t* next_job = OS.runnablejobs;
+    if (next_job == NULL) {
+        next_job = OS.scheduledjobs;
+    }
+     // determine next deadline
+    u4_t next_deadline_ticks = hal_ticks() + INT32_MAX;
+    if (next_job) {
+        next_deadline_ticks = next_job->deadline;
+    }
+
+    // sleep until next_deadline or max_deadline, whichever is earlier
+    s4_t duration_to_next_job = (s4_t)(next_deadline_ticks-hal_ticks());
+    s4_t duration_to_max_deadline = (s4_t)(max_deadline_ticks-hal_ticks());
+    if ( duration_to_next_job < duration_to_max_deadline ) {
+        hal_sleep(next_deadline_ticks);
+    } else {
+        hal_sleep(max_deadline_ticks);
+    }
+
+    hal_enableIRQs();
 }
