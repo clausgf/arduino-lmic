@@ -66,6 +66,7 @@ void os_setCallback (osjob_t* job, osjobcb_t cb) {
     // remove if job was already queued
     os_clearCallback(job);
     // fill-in job
+    job->deadline = hal_ticks();
     job->func = cb;
     job->next = NULL;
     // add to end of run queue
@@ -109,7 +110,7 @@ void os_runloop () {
     }
 }
 
-void os_runloop_once() {
+u4_t os_runloop_once() {
     #if LMIC_DEBUG_LEVEL > 1
         bool has_deadline = false;
     #endif
@@ -126,7 +127,7 @@ void os_runloop_once() {
             has_deadline = true;
         #endif
     } else { // nothing pending
-        hal_sleep(); // wake by irq (timer already restarted)
+        hal_sleep(0); // wake by irq (timer already restarted)
     }
     hal_enableIRQs();
     if(j) { // run job callback
@@ -135,4 +136,6 @@ void os_runloop_once() {
         #endif
         j->func(j);
     }
+
+    return 0;
 }

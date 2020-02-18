@@ -1,3 +1,11 @@
+Generic Arduino LMIC library
+============================
+This repository is a fork of Matthijs Kooijman's Arduino-LMIC library 
+(https://github.com/matthijskooijman/arduino-lmic). Changes:
+- In the original library, the Arduino HAL is hardcoded. My SAMD projects needed a different timer handling to enable energy savings by using standby mode. Thus the HAL implementation was moved to the project using LMIC, leaving the library completely generic.
+- hal_sleep() changed to accept a duration as a wakeup reason (alternative to IRQ)
+- hal_sleep() moved from os_runloop_once() to os_runloop
+
 Arduino-LMIC library
 ====================
 This repository contains the IBM LMIC (LoraMAC-in-C) library, slightly
