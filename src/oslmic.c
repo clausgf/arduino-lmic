@@ -139,27 +139,24 @@ void os_runloop_once() {
 }
 
 void os_sleep_until_irq_or_job (u4_t max_deadline_ticks) {
+    // determine next deadline
     hal_disableIRQs();
-
-    // determine next job
-    osjob_t* next_job = OS.runnablejobs;
-    if (next_job == NULL) {
-        next_job = OS.scheduledjobs;
+    u4_t next_job_deadline_ticks = hal_ticks() + INT32_MAX;
+    if (OS.runnablejobs) {
+        next_job_deadline_ticks = 0;
+    } else if (OS.scheduledjobs) {
+        next_job_deadline_ticks = (uint32_t)(OS.scheduledjobs->deadline);
     }
-     // determine next deadline
-    u4_t next_deadline_ticks = hal_ticks() + INT32_MAX;
-    if (next_job) {
-        next_deadline_ticks = next_job->deadline;
-    }
+    hal_enableIRQs();
 
     // sleep until next_deadline or max_deadline, whichever is earlier
-    s4_t duration_to_next_job = (s4_t)(next_deadline_ticks-hal_ticks());
+    s4_t duration_to_next_job = (s4_t)(next_job_deadline_ticks-hal_ticks());
     s4_t duration_to_max_deadline = (s4_t)(max_deadline_ticks-hal_ticks());
-    if ( duration_to_next_job < duration_to_max_deadline ) {
-        hal_sleep(next_deadline_ticks);
-    } else {
-        hal_sleep(max_deadline_ticks);
+    if (duration_to_next_job > 0 && duration_to_max_deadline > 0) {
+        if ( duration_to_next_job < duration_to_max_deadline ) {
+            hal_sleep(next_job_deadline_ticks);
+        } else {
+            hal_sleep(max_deadline_ticks);
+        }
     }
-
-    hal_enableIRQs();
 }
